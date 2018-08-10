@@ -66,3 +66,17 @@
     name: "{{ mktemp.stdout }}"
     state: absent
   changed_when: False
+
+- name: Add in additional proxy (workaround)
+  template:
+    dest: "/tmp/proxy.yaml"
+    src: "proxy.yaml.j2"
+
+- name: Launch additional proxy (workaround)
+  command: >
+    {{ openshift_client_binary }} apply
+    -f /tmp/proxy.yaml
+    --config={{ openshift.common.config_base }}/master/admin.kubeconfig
+  register: proxy_create_output
+  failed_when: "proxy_create_output.rc != 0"
+  changed_when: "('created' in proxy_create_output.stdout) or ('configured' in proxy_create_output.stdout)"
